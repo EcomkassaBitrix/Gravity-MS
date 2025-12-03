@@ -1,0 +1,12 @@
+{
+    "autoload": {
+        "psr-4": {
+            "Ecomkassa\\Moysklad\\": "src/"
+        }
+    },
+    "require": {
+        "monolog/monolog": "^3.9",
+        "phpdevcommunity/php-dotenv": "^3.0",
+        "guzzlehttp/guzzle": "^7.10"
+    }
+}

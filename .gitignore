@@ -1,0 +1,7 @@
+/app/*.app
+/app/*.key
+/vendor
+/nbproject
+/composer.phar
+.env
+/logs/*.log
