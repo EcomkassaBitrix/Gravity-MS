@@ -136,7 +136,7 @@ if ($isAdmin) {
                     ?>
                 </select>
             </div>
-            <div class="form-text">ИНН организации.</div>
+            <div class="form-text">Система налогобложения организации.</div>
         </div>
 
         <div class="mb-3">
@@ -144,6 +144,7 @@ if ($isAdmin) {
             <div class="input-group">
                 <input type="text" class="ui-input" id="email" name="email" placeholder="example@example.com..." value="<?= htmlspecialchars($email); ?>" />
             </div>
+            <div class="form-text">E-mail организации.</div>
         </div>
 
         <div class="mb-3">
@@ -151,6 +152,7 @@ if ($isAdmin) {
             <div class="input-group">
                 <input type="text" class="ui-input" id="address" name="address" placeholder="https://www..." value="<?= htmlspecialchars($address); ?>" />
             </div>
+            <div class="form-text">Адрес точки продаж. Для сайтов - адрес сайта.</div>
         </div>
 
                             
