@@ -253,8 +253,11 @@ function log_message($level, $message)
             $message
         );
 
-  
-        // Пишем в stderr для Docker
+        $vendorLog = getenv('VENDOR_LOG');
+
+        if (!empty($vendorLog)) {
+            file_put_contents($vendorLog, $log_entry, FILE_APPEND);
+        }
     }
 }
 

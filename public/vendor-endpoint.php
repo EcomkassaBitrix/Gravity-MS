@@ -26,9 +26,11 @@ $n = count($pp);
 $appId = $pp[0];
 $accountId = $pp[1];
 
-log_message('DEBUG', "Extracted: appId=$appId, accountId=$accountId");
+log_message('DEBUG', "Extracted: appId=$appId, accountId=$accountId, path=$path, method=$method");
 
 $app = AppInstance::load($appId, $accountId);
+
+log_message('DEBUG', "App: " . json_encode($app) );
 
 switch ($method) {
     case 'PUT':
@@ -84,7 +86,12 @@ switch ($method) {
         replyStatus($appId, $accountId, $app->getStatusName());
         break;
     case 'DELETE':
+        log_message('DEBUG', "DELETE");
+
         checkAppStatus($appId, $accountId, $app->getStatusName());
+
+        log_message('DEBUG', "checkAppStatus after, appId=" . $appId . ", accountId=" . $accountId . ": " . $app->getStatusName());
+
         $app->delete();
         log_message('INFO', "App appId=$appId deleted on accountId=$accountId");
         break;
