@@ -8,7 +8,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../lib/lib.php';
 require_once __DIR__ . '/../lib/jwt.lib.php';
 
-B//print '<pre>';print_r($_SERVER);
+//print '<pre>';print_r($_SERVER);
 $method = $_SERVER['REQUEST_METHOD'];
 $path = $_SERVER['SCRIPT_NAME'] ?? '';
 $headers = apache_request_headers();
