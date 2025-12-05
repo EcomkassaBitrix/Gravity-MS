@@ -48,6 +48,26 @@ class Vat
     public const VAT_22 = 'vat22';
 
     /**
+     * НДС, рассчитанный по ставке 5/105
+     */
+    public const VAT_105 = 'vat105';
+
+    /**
+     * НДС, рассчитанный по ставке 7/107
+     */
+    public const VAT_107 = 'vat107';
+
+    /**
+     * НДС, рассчитанный по ставке 20/120
+     */
+    public const VAT_120 = 'vat120';
+
+    /**
+     * НДС, рассчитанный по ставке 22/122
+     */
+    public const VAT_122 = 'vat122';
+
+    /**
      * Тип налога
      *
      * @var string|null
@@ -62,6 +82,10 @@ class Vat
         18 => self::VAT_18,
         20 => self::VAT_20,
         22 => self::VAT_22,
+        105 => self::VAT_105,
+        107 => self::VAT_107,
+        120 => self::VAT_120,
+        122 => self::VAT_122,
     ];
     
     public function getByValue(?int $value): ?string
