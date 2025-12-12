@@ -2,6 +2,16 @@
     font-family: Sans-Serif;
 }
 
+HTML {
+    overflow: auto;
+    height: 100%;
+}
+
+BODY {
+    overflow: auto;
+    height: 100%;
+}
+
 .form-label {
     margin-bottom: 10px;
     font-size: 14px;
