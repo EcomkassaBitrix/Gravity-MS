@@ -47,6 +47,6 @@ class RsaFileStorage extends AbstractRsaStorage
      */
     public function getFilename(string $str): string
     {
-        return self::DIR . $str  . '.key';
+        return __DIR__ . '/../../' . getenv('DATA_DIR') . '/' . $str  . '.key';
     }
 }
