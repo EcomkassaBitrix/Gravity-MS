@@ -35,6 +35,14 @@ class Helper
      */
     public static function getHost(): string
     {
+        $parsedUrl = \parse_url(getenv('APP_BASE_URL'));
+        $host = $parsedUrl['host'] ?? null;
+
+        if ($host !== null) {
+
+            return $host;
+        }
+
         return $_SERVER['SERVER_NAME'];
     }
 
