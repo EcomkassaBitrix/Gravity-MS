@@ -267,7 +267,7 @@ class WebhookService extends AbstractService
                 Type::CUSTOMER_ORDER
             );
 
-            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::CREATE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::CREATE, 'url' => $url,]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::CUSTOMER_ORDER, Action::UPDATE),
@@ -275,7 +275,7 @@ class WebhookService extends AbstractService
                 Type::CUSTOMER_ORDER
             );
 
-            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::UPDATE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::UPDATE, 'url' => $url,]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::CUSTOMER_ORDER, Action::DELETE),
@@ -283,7 +283,7 @@ class WebhookService extends AbstractService
                 Type::CUSTOMER_ORDER
             );
 
-            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::DELETE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::DELETE, 'url' => $url,]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::DEMAND, Action::CREATE),
@@ -291,7 +291,7 @@ class WebhookService extends AbstractService
                 Type::DEMAND
             );
 
-            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::CREATE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::CREATE, 'url' => $url,]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::DEMAND, Action::UPDATE),
@@ -299,7 +299,7 @@ class WebhookService extends AbstractService
                 Type::DEMAND
             );
 
-            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::UPDATE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::UPDATE, 'url' => $url,]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::DEMAND, Action::DELETE),
@@ -307,7 +307,7 @@ class WebhookService extends AbstractService
                 Type::DEMAND
             );
 
-            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::DELETE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::DELETE, 'url' => $url,]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::SALES_RETURN, Action::CREATE),
@@ -315,7 +315,7 @@ class WebhookService extends AbstractService
                 Type::SALES_RETURN
             );
 
-            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::CREATE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::CREATE, 'url' => $url,]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::SALES_RETURN, Action::UPDATE),
@@ -323,7 +323,7 @@ class WebhookService extends AbstractService
                 Type::SALES_RETURN
             );
 
-            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::UPDATE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::UPDATE, 'url' => $url,]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::SALES_RETURN, Action::DELETE),
@@ -331,11 +331,12 @@ class WebhookService extends AbstractService
                 Type::SALES_RETURN
             );
 
-            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::DELETE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::DELETE, 'url' => $url,]);
 
         } catch (AbstractException $exception) {
             $this->getLogger()->error('Вебхук не установлен: ' . $exception->getMessage(), [
                 'accountId' => $accountId,
+                'url' => $url,
             ]);
         }
     }
