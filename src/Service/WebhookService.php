@@ -19,6 +19,16 @@ use Ecomkassa\Moysklad\SDK\Moysklad\Exception\AbstractException;
 class WebhookService extends AbstractService
 {
     /**
+     * Сообщение в журнал событий при удалении вебхука
+     */
+    public const LOG_DELETE_WEBHOOK = 'Удален вебхук из системы МойСклад';
+
+    /**
+     * Сообщение в журнал событий при создании вебхука
+     */
+    public const LOG_CREATE_WEBHOOK = 'Вебхук установлен в систему МойСклад';
+
+    /**
      * Список обработчиков
      *
      * @var array
@@ -60,6 +70,11 @@ class WebhookService extends AbstractService
     {
         $content = $this->getContent();
         $queryString = $this->getQueryString();
+
+        $this->getLogger()->info('Начало выполнения обработки входящего вебхука', [
+            'content' => $content,
+            'queryString' => $queryString,
+        ]);
 
         $webhook = new Webhook($content);
 
@@ -176,7 +191,7 @@ class WebhookService extends AbstractService
         $jsonApi = $this->getJsonApi($accountId);
         $webhooks = $jsonApi->getWebhooks();
 
-        $this->getLogger()->info('Поиск вебхуков', [
+        $this->getLogger()->info('Поиск вебхуков в системе МойСклад', [
             'accountId' => $accountId,
         ]);
 
@@ -184,64 +199,65 @@ class WebhookService extends AbstractService
             $rows = $webhooks->rows ?? null;
 
             if (is_array($rows)) {
-                $logger->info(sprintf('Вебхуков для установки всего: %d', count($rows)), ['accountId' => $accountId]);
+                $logger->info(sprintf('В системе МойСклад найдено %d вебхуков, которые уже установлены', count($rows)), ['accountId' => $accountId]);
 
                 foreach ($rows as $webhook) {
                     if ($webhook->entityType == Type::CUSTOMER_ORDER) {
                         if ($webhook->action == Action::CREATE) {
                             $jsonApi->deleteWebhook($webhook);
-                            $logger->info('Вебхук удален', ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::CREATE]);
+                            $logger->info(self::LOG_DELETE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::CREATE]);
                         }
 
                         if ($webhook->action == Action::UPDATE) {
                             $jsonApi->deleteWebhook($webhook);
-                            $logger->info('Вебхук удален', ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::UPDATE]);
+                            $logger->info(self::LOG_DELETE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::UPDATE]);
                         }
                         if ($webhook->action == Action::DELETE) {
                             $jsonApi->deleteWebhook($webhook);
-                            $logger->info('Вебхук удален', ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::DELETE]);
+                            $logger->info(self::LOG_DELETE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::DELETE]);
                         }
                     }
 
                     if ($webhook->entityType == Type::DEMAND) {
                         if ($webhook->action == Action::CREATE) {
                             $jsonApi->deleteWebhook($webhook);
-                            $logger->info('Вебхук удален', ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::CREATE]);
+                            $logger->info(self::LOG_DELETE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::CREATE]);
                         }
 
                         if ($webhook->action == Action::UPDATE) {
                             $jsonApi->deleteWebhook($webhook);
-                            $logger->info('Вебхук удален', ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::UPDATE]);
+                            $logger->info(self::LOG_DELETE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::UPDATE]);
                         }
                         if ($webhook->action == Action::DELETE) {
                             $jsonApi->deleteWebhook($webhook);
-                            $logger->info('Вебхук удален', ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::DELETE]);
+                            $logger->info(self::LOG_DELETE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::DELETE]);
                         }
                     }
 
                     if ($webhook->entityType == Type::SALES_RETURN) {
                         if ($webhook->action == Action::CREATE) {
                             $jsonApi->deleteWebhook($webhook);
-                            $logger->info('Вебхук удален', ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::CREATE]);
+                            $logger->info(self::LOG_DELETE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::CREATE]);
                         }
 
                         if ($webhook->action == Action::UPDATE) {
                             $jsonApi->deleteWebhook($webhook);
-                            $logger->info('Вебхук удален', ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::UPDATE]);
+                            $logger->info(self::LOG_DELETE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::UPDATE]);
                         }
 
                         if ($webhook->action == Action::DELETE) {
                             $jsonApi->deleteWebhook($webhook);
-                            $logger->info('Вебхук удален', ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::DELETE]);
+                            $logger->info(self::LOG_DELETE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::DELETE]);
                         }
                     }
                 }
             } else {
-                $this->getLogger()->info('Список вебхуков пустой', ['accountId' => $accountId]);
+                $this->getLogger()->info('В системе МойСклад не обнаружено вебхуков', ['accountId' => $accountId]);
             }
         } else {
-            $this->getLogger()->info('Ранее установленные вебхуки не найдены', ['accountId' => $accountId]);
+            $this->getLogger()->warning('Система МойСклад не вернула информацию о вебхуках', ['accountId' => $accountId]);
         }
+
         $url = $this->getUrl();
 
         try {
@@ -251,7 +267,7 @@ class WebhookService extends AbstractService
                 Type::CUSTOMER_ORDER
             );
 
-            $logger->info('Вебхук установлен', ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::CREATE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::CREATE]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::CUSTOMER_ORDER, Action::UPDATE),
@@ -259,7 +275,7 @@ class WebhookService extends AbstractService
                 Type::CUSTOMER_ORDER
             );
 
-            $logger->info('Вебхук установлен', ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::UPDATE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::UPDATE]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::CUSTOMER_ORDER, Action::DELETE),
@@ -267,7 +283,7 @@ class WebhookService extends AbstractService
                 Type::CUSTOMER_ORDER
             );
 
-            $logger->info('Вебхук установлен', ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::DELETE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::CUSTOMER_ORDER, 'action'=> Action::DELETE]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::DEMAND, Action::CREATE),
@@ -275,7 +291,7 @@ class WebhookService extends AbstractService
                 Type::DEMAND
             );
 
-            $logger->info('Вебхук установлен', ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::CREATE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::CREATE]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::DEMAND, Action::UPDATE),
@@ -283,7 +299,7 @@ class WebhookService extends AbstractService
                 Type::DEMAND
             );
 
-            $logger->info('Вебхук установлен', ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::UPDATE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::UPDATE]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::DEMAND, Action::DELETE),
@@ -291,7 +307,7 @@ class WebhookService extends AbstractService
                 Type::DEMAND
             );
 
-            $logger->info('Вебхук установлен', ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::DELETE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::DEMAND, 'action'=> Action::DELETE]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::SALES_RETURN, Action::CREATE),
@@ -299,7 +315,7 @@ class WebhookService extends AbstractService
                 Type::SALES_RETURN
             );
 
-            $logger->info('Вебхук установлен', ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::CREATE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::CREATE]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::SALES_RETURN, Action::UPDATE),
@@ -307,7 +323,7 @@ class WebhookService extends AbstractService
                 Type::SALES_RETURN
             );
 
-            $logger->info('Вебхук установлен', ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::UPDATE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::UPDATE]);
 
             $jsonApi->createWebhook(
                 sprintf($url, $accountId, Type::SALES_RETURN, Action::DELETE),
@@ -315,7 +331,7 @@ class WebhookService extends AbstractService
                 Type::SALES_RETURN
             );
 
-            $logger->info('Вебхук установлен', ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::DELETE]);
+            $logger->info(self::LOG_CREATE_WEBHOOK, ['accountId' => $accountId, 'type' => Type::SALES_RETURN, 'action'=> Action::DELETE]);
 
         } catch (AbstractException $exception) {
             $this->getLogger()->error('Вебхук не установлен: ' . $exception->getMessage(), [

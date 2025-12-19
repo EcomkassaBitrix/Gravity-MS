@@ -439,12 +439,12 @@
             "version": "3.0.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/phpdevcommunity/php-dotenv.git",
+                "url": "https://github.com/michelphp/php-dotenv.git",
                 "reference": "896b6b1a1184dddd76e536fed674560f4381b400"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpdevcommunity/php-dotenv/zipball/896b6b1a1184dddd76e536fed674560f4381b400",
+                "url": "https://api.github.com/repos/michelphp/php-dotenv/zipball/896b6b1a1184dddd76e536fed674560f4381b400",
                 "reference": "896b6b1a1184dddd76e536fed674560f4381b400",
                 "shasum": ""
             },
@@ -473,9 +473,10 @@
             ],
             "description": "PHP-DotEnv is a lightweight PHP library designed to simplify the management of environment variables in your PHP applications.",
             "support": {
-                "issues": "https://github.com/phpdevcommunity/php-dotenv/issues",
-                "source": "https://github.com/phpdevcommunity/php-dotenv/tree/3.0.1"
+                "issues": "https://github.com/michelphp/php-dotenv/issues",
+                "source": "https://github.com/michelphp/php-dotenv/tree/3.0.1"
             },
+            "abandoned": "michel/dotenv",
             "time": "2024-12-01T16:42:44+00:00"
         },
         {

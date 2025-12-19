@@ -1,5 +1,5 @@
-/app/*.app
-/app/*.key
+/data/*.app
+/data/*.key
 /vendor
 /nbproject
 /composer.phar

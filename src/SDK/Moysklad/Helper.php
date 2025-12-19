@@ -87,13 +87,15 @@ class Helper
 
         foreach ($directory as $file) {
             if ($file->isFile()) {
-                if (strpos($file->getFilename(), $accountId) !== false) {
-                    require_once __DIR__ . '/../../../lib/lib.php';
-                    $app = unserialize(file_get_contents($file->getPathname()));
+                if (strpos($file->getFilename(), getenv('APP_ID')) !== false) {
+                    if (strpos($file->getFilename(), $accountId) !== false) {
+                        require_once __DIR__ . '/../../../lib/lib.php';
+                        $app = unserialize(file_get_contents($file->getPathname()));
 
-                    if ($app) {
+                        if ($app) {
 
-                        return $app;
+                            return $app;
+                        }
                     }
                 }
             }

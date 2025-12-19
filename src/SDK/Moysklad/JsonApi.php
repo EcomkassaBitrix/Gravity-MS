@@ -4,6 +4,7 @@ namespace Ecomkassa\Moysklad\SDK\Moysklad;
 
 use Exception;
 use Ecomkassa\Moysklad\SDK\Moysklad\Exception\ApplicationUnavailableException;
+use Ecomkassa\Moysklad\SDK\Moysklad\Exception\ApiException;
 
 /**
  * Класс для работы с JSON API Moysklad
@@ -165,6 +166,16 @@ class JsonApi
 
             if (!empty($body)) {
                 $data = json_decode($body);
+
+                $errors = $data?->errors ?? null;
+
+                if (is_array($errors)) {
+                    foreach ($errors as $error) {
+                        $exception = new ApiException(($error?->error ?? 'Неизвестная ошибка')  . ' (token=' . $bearerToken . ')');
+
+                        throw $exception;
+                    }
+                }
 
                 if (json_last_error() != JSON_ERROR_NONE) {
 
