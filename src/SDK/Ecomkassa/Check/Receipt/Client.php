@@ -2,6 +2,8 @@
 
 namespace Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt;
 
+use Ecomkassa\Moysklad\SDK\Ecomkassa\Data\Phone;
+
 /**
  * Класс информации о клиенте
  */
@@ -37,6 +39,7 @@ class Client
         }
 
         $phone = $this->getPhone();
+        $phone = Phone::format($phone);
 
         if (!empty($phone)) {
             $a['phone'] = $phone;
