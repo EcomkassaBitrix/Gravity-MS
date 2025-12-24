@@ -194,11 +194,11 @@ class JsonApi
      * @param string $objectId ID объекта
      * @return mixed Результат запроса
      */
-    function getObject($entity, $objectId)
+    function getObject($entity, $objectId, bool $force = false)
     {
-        return makeHttpRequest(
+        return $this->makeHttpRequest(
             'GET',
-            $this->getJsonApiUrl() . '/entity/' . $entity . '/' . $objectId,
+            $this->getJsonApiUrl() . '/entity/' . $entity . '/' . $objectId . ( $force ? ('?t=' . time()) : ''),
             $this->getAccessToken());
     }
 
@@ -210,10 +210,59 @@ class JsonApi
      */
     function getObjects($entity)
     {
-        return makeHttpRequest(
+        return $this->makeHttpRequest(
             'GET',
             $this->getJsonApiUrl() . '/entity/' . $entity,
             $this->getAccessToken());
+    }
+
+    /**
+     * Получает и возвращает мета-данные атрибута сущности
+     *
+     * @param string $entity Код сущности
+     * @return null|object Объект мета-данных атрибута
+     */
+    function getAttributes($entity)
+    {
+        return $this->makeHttpRequest(
+            'GET',
+            $this->getJsonApiUrl() . '/entity/' . $entity . '/metadata/attributes',
+            $this->getAccessToken());
+    }
+
+    /**
+     * Создает атрибут для сущности
+     *
+     * @param string $entity Код сущности
+     * @param array $attributes Массив атрибутов сущности
+     * @return null|object Результат обработки
+     */
+    function createAttributes($entity, $attributes)
+    {
+        return $this->makeHttpRequest(
+            'POST',
+            $this->getJsonApiUrl() . '/entity/' . $entity . '/metadata/attributes',
+            $this->getAccessToken(),
+            json_encode($attributes));
+    }
+
+    /**
+     * Сохранет значение в атрибуты сущности
+     *
+     * @param string $entity Код сущности
+     * @param string $id Идентификатор сущности
+     * @param array $attributes Массив атрибутов сущности со значениями
+     * @return null|object Результат обработки
+     */
+    function storeAttributes($entity, $id, $attributes)
+    {
+        return $this->makeHttpRequest(
+            'PUT',
+            $this->getJsonApiUrl() . '/entity/' . $entity . '/' . $id,
+            $this->getAccessToken(),
+            json_encode([
+                'attributes' => $attributes,
+            ]));
     }
 
     /**

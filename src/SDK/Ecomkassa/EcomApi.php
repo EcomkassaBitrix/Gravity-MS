@@ -56,7 +56,7 @@ class EcomApi
      * @var string
      */
     protected string $ecomkassaSendCheckUrl = self::ECOMKASSA_SEND_CHECK_URL;
-    
+
     /**
      * Адрес предварительной проверки маркировки "Честный знак"
      *
@@ -75,10 +75,10 @@ class EcomApi
      * Предварительная проверка маркировки "Честный знак"
      *
      * @param Check $check Чек
-     * @param type $groupCode Группа отправки
-     * @param type $operation Операция
-     * @param type $login Логин
-     * @param type $password Пароль
+     * @param string $groupCode Группа отправки
+     * @param string $operation Операция
+     * @param string $login Логин
+     * @param string $password Пароль
      */
     public function markVerify(Check $check, $groupCode, $operation, $login, $password): ?MarkVerifyResponse
     {
@@ -99,12 +99,21 @@ class EcomApi
         return new MarkVerifyResponse($response);
     }
 
+    /**
+     * Отправляет запрос в систему Екомкасса
+     *
+     * @param Check $check Чек
+     * @param string $groupCode Группа отправки
+     * @param string $operation Операция
+     * @param string $login Логин
+     * @param string $password Пароль
+     */
     public function send(Check $check, $groupCode, $operation, $login, $password)
     {
         $client = new Client();
 
         $accessToken = $this->requestAccessToken($login, $password);
-                
+
         $url = $this->fetchEcomkassaSendCheckUrl($groupCode, $operation, $accessToken);
         $data = $check->toArray();
 
@@ -118,6 +127,12 @@ class EcomApi
         return json_decode($response->getBody()->getContents(), true);
     }
 
+    /**
+     * Получает авторизационный токен по логину и паролю
+     *
+     * @param string $login Логин
+     * @param string $password Пароль
+     */
     public function requestAccessToken($login, $password): ?string
     {
         $url = $this->getEcomkassaGetTokenUrl();

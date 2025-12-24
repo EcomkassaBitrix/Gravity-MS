@@ -10,6 +10,7 @@ use Ecomkassa\Moysklad\SDK\Moysklad\Entity\Webhook\Type;
 use Ecomkassa\Moysklad\SDK\Moysklad\Entity\Webhook\Event;
 use Ecomkassa\Moysklad\SDK\Moysklad\Helper;
 use Ecomkassa\Moysklad\SDK\Moysklad\Exception\AbstractException;
+use Ecomkassa\Moysklad\SDK\Moysklad\Attribute;
 
 /**
  * Сервис обработки webhook событий от МойСклад
@@ -195,6 +196,81 @@ class WebhookService extends AbstractService
         $accountId = $_REQUEST['accountId'] ?? null;
         $jsonApi = $this->getJsonApi($accountId);
         $webhooks = $jsonApi->getWebhooks();
+
+        $entityTypes = [
+            Type::DEMAND,
+            Type::CUSTOMER_ORDER,
+            Type::SALES_RETURN,
+        ];
+
+        foreach ($entityTypes as $entityType) {
+            $attributes = $jsonApi->getAttributes($entityType);
+            $rows = $attributes?->rows;
+
+            if ($rows) {
+                $this->getLogger()->info(sprintf('Найдено %s атрибутов у сущности "%s"', count($rows), $entityType), [
+                    'accountId' => $accountId,
+                    'rows' => $rows,
+                ]);
+            }
+/*
+            $attributeName = Attribute::ATTRIBUTE_STATUS;
+            $hasAttribute = false;
+
+            if (is_array($rows)) {
+                foreach ($rows as $row) {
+                    if ($row->name == $attributeName) {
+                        $hasAttribute = true;
+
+                        break;
+                    }
+                }
+            }
+
+            if (!$hasAttribute) {
+                $jsonApi->createAttributes($entityType, [
+                    [
+                        'name' => $attributeName,
+                        'type' => 'string',
+                        'required' => false,
+                        'description' => $attributeName . '. Заполняется автоматически при взаимодействии с внешней системой Екомкасса',
+                    ],
+                ]);
+
+                $this->getLogger()->info(sprintf('Создан атрибут "%s" для сущности "%s"', $attributeName, $entityType), [
+                    'accountId' => $accountId,
+                ]);
+            }
+*/
+            $attributeName = Attribute::ATTRIBUTE_ID;
+            $hasAttribute = false;
+
+            if (is_array($rows)) {
+                foreach ($rows as $row) {
+                    if ($row->name == $attributeName) {
+                        $hasAttribute = true;
+
+                        break;
+                    }
+                }
+            }
+
+            if (!$hasAttribute) {
+                $jsonApi->createAttributes($entityType, [
+                    [
+                        'name' => $attributeName,
+                        'type' => 'string',
+                        'required' => false,
+                        'description' => $attributeName . '. Заполняется автоматически при взаимодействии с внешней системой Екомкасса',
+                    ],
+                ]);
+
+                $this->getLogger()->info(sprintf('Создан атрибут "%s" для сущности "%s"', $attributeName, $entityType), [
+                    'accountId' => $accountId,
+                ]);
+            }
+
+        }
 
         $this->getLogger()->info('Поиск вебхуков в системе МойСклад', [
             'accountId' => $accountId,

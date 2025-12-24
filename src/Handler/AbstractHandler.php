@@ -7,8 +7,8 @@ use Ecomkassa\Moysklad\SDK\Moysklad\Entity\Webhook\Event;
 use Ecomkassa\Moysklad\SDK\Moysklad\JsonApi;
 use Ecomkassa\Moysklad\SDK\Moysklad\Helper;
 use Ecomkassa\Moysklad\SDK\Moysklad\Service\DocumentService;
-use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Operation;
 use Ecomkassa\Moysklad\SDK\Moysklad\Entity\Webhook\Type;
+use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Operation;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\MarkCodeDetector;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Response\MarkVerifyResponse;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Response\MarkVerify\MarkVerifyItem;
@@ -22,6 +22,7 @@ use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\Company;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\Payment;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\Position;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\Vat;
+use Ecomkassa\Moysklad\Service\StatusService;
 
 /**
  * Абстрактный обработчик webhook событий от МойСклад
@@ -186,8 +187,8 @@ abstract class AbstractHandler
 
                     $product = $jsonApi->getByHref($row->assortment->meta->href);
 
-                    $this->getLogger()->info('product url: ' . json_encode($row->assortment->meta->href, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
-                    $this->getLogger()->info('product: ' . json_encode($product, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
+                    $this->getLogger()->info('URL товара: ' . json_encode($row->assortment->meta->href, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
+                    $this->getLogger()->info('Товар: ' . json_encode($product, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
 
                     if ($row->discount) {
                         $row->price = $row->price - ($row->price * ($row->discount / 100));
@@ -210,7 +211,7 @@ abstract class AbstractHandler
                     }
 
                     $position->setVat($vat);
-                    $this->getLogger()->info('vat: ' . json_encode($position->getVat()?->toArray(), JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
+                    $this->getLogger()->info('НДС: ' . json_encode($position->getVat()?->toArray(), JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
 
                     if ($app->obj[$documentIndex] ?? null) {
                         $position->setPaymentObject($app->obj[$documentIndex]);
@@ -241,10 +242,19 @@ abstract class AbstractHandler
             $this->getLogger()->info('Предварительная проверка маркировки "Честный знак" пропущена так как выполняется только полного расчета');
         }
 
-        $response = $ecomApi->send($check, $groupCode, $operation, $login, $password);
+        $statusService = new StatusService($this->getLogger());
 
-        $this->getLogger()->info('Ответ сервиса: ' . json_encode($response));
+        if ($statusService->alreadyStored($entity)) {
+            $this->getLogger()->warning('Чек уже создавался и не будет создан повторно', ['entity' => $entity]);
+        } else {
+            $response = $ecomApi->send($check, $groupCode, $operation, $login, $password);
 
+            $this->getLogger()->info('Ответ сервиса: ' . json_encode($response));
+
+            if ($response) {
+                $statusService->store($entity, $response);
+            }
+        }
     }
 
     /**
