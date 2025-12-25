@@ -10,6 +10,8 @@ use Ecomkassa\Moysklad\Handler;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+ini_set('serialize_precision', -1);
+
 $absolutePathToEnvFile = __DIR__ . '/../.env';
 (new DotEnv($absolutePathToEnvFile))->load();
 
