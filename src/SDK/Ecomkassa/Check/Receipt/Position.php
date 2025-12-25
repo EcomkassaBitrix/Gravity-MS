@@ -152,8 +152,8 @@ class Position
     {
         $a = [
             'name' => $this->getName(),
-            'price' => $this->getPrice(),
-            'sum' => $this->getSum(),
+            'price' => round($this->getPrice(), 2),
+            'sum' => round($this->getSum(), 2),
             'quantity' => $this->getQuantity(),
             'measure' => $this->getMeasure(),
             'payment_method' => $this->getPaymentMethod(),

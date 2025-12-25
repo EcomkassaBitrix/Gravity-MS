@@ -67,7 +67,7 @@ class Receipt
             'company' => $this->getCompany()?->toArray(),
             'payments' => $payments,
             'items' => $this->getItems(),
-            'total' => $this->getTotal(),
+            'total' => round($this->getTotal(), 2),
         ];
 
         return $a;

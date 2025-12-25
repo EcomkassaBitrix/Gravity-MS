@@ -393,7 +393,7 @@ class Payment
     {
         return [
             'type' => $this->getType(),
-            'sum' => $this->getSum(),
+            'sum' => round($this->getSum(), 2),
         ];
     }
 
