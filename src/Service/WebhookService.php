@@ -293,7 +293,7 @@ class WebhookService extends AbstractService
 
                 foreach ($rows as $webhook) {
                     $webhookUrl = sprintf($url, $accountId, $webhook->entityType, $webhook->action);
-                    $installed[$webhook->entityType][$webhook->action][$webhookUrl] = true;
+                    $installed[$webhook->entityType][$webhook->action][$webhook->url] = true;
                 }
 
                  $logger->info('Установленные вебхуки', ['installed' => $installed]);
