@@ -30,6 +30,11 @@ class WebhookService extends AbstractService
     public const LOG_CREATE_WEBHOOK = 'Вебхук установлен в систему МойСклад';
 
     /**
+     * Сообщение в журнал событий при начале создания вебхука
+     */
+    public const LOG_CREATING_WEBHOOK = 'Попытка создать вебхук в системе МойСклад';
+
+    /**
      * Сообщение в журнал событий при создании вебхука
      */
     public const LOG_ALREADY_CREATED_WEBHOOK = 'Вебхук уже был установлен в систему МойСклад';
@@ -276,6 +281,8 @@ class WebhookService extends AbstractService
             'accountId' => $accountId,
         ]);
 
+        $url = $this->getUrl();
+
         $installed = [];
 
         if ($webhooks) {
@@ -285,8 +292,11 @@ class WebhookService extends AbstractService
                 $logger->info(sprintf('В системе МойСклад найдено %d вебхуков, которые уже установлены', count($rows)), ['accountId' => $accountId]);
 
                 foreach ($rows as $webhook) {
-                    $installed[$webhook->entityType][$webhook->action] = true;
+                    $webhookUrl = sprintf($url, $accountId, $webhook->entityType, $webhook->action);
+                    $installed[$webhook->entityType][$webhook->action][$webhookUrl] = true;
                 }
+
+                 $logger->info('Установленные вебхуки', ['installed' => $installed]);
             } else {
                 $this->getLogger()->info('В системе МойСклад не обнаружено вебхуков', ['accountId' => $accountId]);
             }
@@ -294,7 +304,6 @@ class WebhookService extends AbstractService
             $this->getLogger()->warning('Система МойСклад не вернула информацию о вебхуках', ['accountId' => $accountId]);
         }
 
-        $url = $this->getUrl();
 
         try {
             $map = [
@@ -317,23 +326,30 @@ class WebhookService extends AbstractService
 
             foreach ($map as $type => $actions) {
                 foreach ($actions as $action) {
+                    $webhookUrl = sprintf($url, $accountId, $type, $action);
 
                     $info = [
                         'accountId' => $accountId,
                         'type' => $type,
                         'action'=> $action,
-                        'url' => $url,
+                        'url' => $webhookUrl,
                     ];
 
-                    if (!isset($installed[$type][$action])) {
+                    if (true !== ($installed[$type][$action][$webhookUrl] ?? null)) {
+                        $logger->info(self::LOG_CREATING_WEBHOOK, [
+                            'type' => $type,
+                            'action' => $action,
+                            'url' => $webhookUrl,
+                        ]);
+
                         $jsonApi->createWebhook(
-                            sprintf($url, $accountId, $type, $action),
+                            $webhookUrl,
                             $action,
                             $type
                         );
                         $logger->info(self::LOG_CREATE_WEBHOOK, $info);
                     } else {
-                        $logger->info(self::LOG_ALREADY_CREATED_WEBHOOK, $info);
+                        $logger->warning(self::LOG_ALREADY_CREATED_WEBHOOK, $info);
                     }
                 }
             }
