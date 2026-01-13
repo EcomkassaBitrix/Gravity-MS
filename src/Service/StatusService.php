@@ -92,7 +92,8 @@ class StatusService extends AbstractService
                 'object' => $object,
             ]);
 
-            $uuid = $this->fetchAttributeValueFromObject($object, Attribute::ATTRIBUTE_ID);
+            $attributeName = $this->fetchAttributeName($type);
+            $uuid = $this->fetchAttributeValueFromObject($object, $attributeName);
 
             $this->getLogger()->info('Получение статуса чека (uuid)', [
                 'uuid' => $uuid,
@@ -148,7 +149,8 @@ class StatusService extends AbstractService
         $object = $jsonApi->getObject($type, $id);
 
         if ($object) {
-            $savedUuid = $this->fetchAttributeValueFromObject($object, Attribute::ATTRIBUTE_ID);
+            $attributeName = $this->fetchAttributeName($type);
+            $savedUuid = $this->fetchAttributeValueFromObject($object, $attributeName);
 
             if (!empty($savedUuid)) {
 
@@ -166,7 +168,7 @@ class StatusService extends AbstractService
      * @param array $response Массив данных ответа внешней системы
      * @return bool Результат операции
      */
-    public function store($entity, $response)
+    public function store($entity, $response, bool $force = false)
     {
         $uuid = $response['uuid'] ?? null;
         $type = $entity?->meta?->type ?? null;
@@ -185,18 +187,27 @@ class StatusService extends AbstractService
         $object = $jsonApi->getObject($type, $id);
 
         if ($object) {
-            $savedUuid = $this->fetchAttributeValueFromObject($object, Attribute::ATTRIBUTE_ID);
+            $attributeName = $this->fetchAttributeName($type);
+            $savedUuid = $this->fetchAttributeValueFromObject($object, $attributeName);
 
             if (!empty($savedUuid)) {
+                if ($force === false) {
+                    $this->getLogger()->warning('Обнаружены сведения о ранее созданном чеке. Сохранение отменено', [
+                        'type' => $type,
+                        'id' => $id,
+                        'accountId' => $accountId,
+                        'uuid' => $savedUuid,
+                    ]);
 
-                $this->getLogger()->info('Обнаружены сведения о ранее созданном чеке. Сохранение отменено', [
-                    'type' => $type,
-                    'id' => $id,
-                    'accountId' => $accountId,
-                    'uuid' => $savedUuid,
-                ]);
-
-                return true;
+                    return true;
+                } else {
+                    $this->getLogger()->warning('Обнаружены сведения о ранее созданном чеке, но значение будет перезаписано потому, что используется принудительный режим записи.', [
+                        'type' => $type,
+                        'id' => $id,
+                        'accountId' => $accountId,
+                        'uuid' => $savedUuid,
+                    ]);
+                }
             }
         }
 
@@ -207,11 +218,12 @@ class StatusService extends AbstractService
             'accountId' => $accountId,
         ]);
 
-        $meta = $this->getAttributeMeta($attributes, Attribute::ATTRIBUTE_ID);
+        $attributeName = $this->fetchAttributeName($type);
+        $meta = $this->getAttributeMeta($attributes, $attributeName);
 
         if ($meta) {
             $this->getLogger()->info('Получены meta-данные для атрибута', [
-                'attributeName' => Attribute::ATTRIBUTE_ID,
+                'attributeName' => $attributeName,
                 'type' => $type,
                 'id' => $id,
                 'uuid' => $uuid,
@@ -252,6 +264,24 @@ class StatusService extends AbstractService
         ]);
 
         return true;
+    }
+
+    /**
+     * Возвращает имя атрибута, в зависимости от типа
+     *
+     * @return string
+     */
+    public function fetchAttributeName($type): string
+    {
+        if ($type == Type::CUSTOMER_ORDER) {
+            return Attribute::ATTRIBUTE_ID_CUSTOMER_ORDER;
+        }
+
+        if ($type == Type::SALES_RETURN) {
+            return Attribute::ATTRIBUTE_ID_SALES_RETURN;
+        }
+
+        return Attribute::ATTRIBUTE_ID_DEMAND;
     }
 
     /**

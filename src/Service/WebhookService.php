@@ -190,6 +190,45 @@ class WebhookService extends AbstractService
     }
 
     /**
+     * Автосоздание атрибута
+     *
+     * @return void
+     */
+    public function createAttribute($jsonApi, $attributeName, $entityType, $accountId, $rows): void
+    {
+        $hasAttribute = false;
+
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                if ($row->name == $attributeName) {
+                    $hasAttribute = true;
+
+                    break;
+                }
+            }
+        }
+
+        if (!$hasAttribute) {
+            $jsonApi->createAttributes($entityType, [
+                [
+                    'name' => $attributeName,
+                    'type' => 'string',
+                    'required' => false,
+                    'description' => $attributeName . '. Заполняется автоматически при взаимодействии с внешней системой Екомкасса',
+                ],
+            ]);
+
+            $this->getLogger()->info(sprintf('Создан атрибут "%s" для сущности "%s"', $attributeName, $entityType), [
+                'accountId' => $accountId,
+            ]);
+        } else {
+            $this->getLogger()->warning(sprintf('Атрибут "%s" уже существует для сущности "%s"', $attributeName, $entityType), [
+                'accountId' => $accountId,
+            ]);
+        }
+    }
+
+    /**
      * Установка вебхуков в МойСклад
      *
      * @return void
@@ -208,6 +247,8 @@ class WebhookService extends AbstractService
             Type::SALES_RETURN,
         ];
 
+        $statusService = new StatusService($logger);
+
         foreach ($entityTypes as $entityType) {
             $attributes = $jsonApi->getAttributes($entityType);
             $rows = $attributes?->rows;
@@ -218,63 +259,10 @@ class WebhookService extends AbstractService
                     'rows' => $rows,
                 ]);
             }
-/*
-            $attributeName = Attribute::ATTRIBUTE_STATUS;
-            $hasAttribute = false;
 
-            if (is_array($rows)) {
-                foreach ($rows as $row) {
-                    if ($row->name == $attributeName) {
-                        $hasAttribute = true;
+            $attributeName = $statusService->fetchAttributeName($entityType);
 
-                        break;
-                    }
-                }
-            }
-
-            if (!$hasAttribute) {
-                $jsonApi->createAttributes($entityType, [
-                    [
-                        'name' => $attributeName,
-                        'type' => 'string',
-                        'required' => false,
-                        'description' => $attributeName . '. Заполняется автоматически при взаимодействии с внешней системой Екомкасса',
-                    ],
-                ]);
-
-                $this->getLogger()->info(sprintf('Создан атрибут "%s" для сущности "%s"', $attributeName, $entityType), [
-                    'accountId' => $accountId,
-                ]);
-            }
-*/
-            $attributeName = Attribute::ATTRIBUTE_ID;
-            $hasAttribute = false;
-
-            if (is_array($rows)) {
-                foreach ($rows as $row) {
-                    if ($row->name == $attributeName) {
-                        $hasAttribute = true;
-
-                        break;
-                    }
-                }
-            }
-
-            if (!$hasAttribute) {
-                $jsonApi->createAttributes($entityType, [
-                    [
-                        'name' => $attributeName,
-                        'type' => 'string',
-                        'required' => false,
-                        'description' => $attributeName . '. Заполняется автоматически при взаимодействии с внешней системой Екомкасса',
-                    ],
-                ]);
-
-                $this->getLogger()->info(sprintf('Создан атрибут "%s" для сущности "%s"', $attributeName, $entityType), [
-                    'accountId' => $accountId,
-                ]);
-            }
-
+            $this->createAttribute($jsonApi, $attributeName, $entityType, $accountId, $rows);
         }
 
         $this->getLogger()->info('Поиск вебхуков в системе МойСклад', [

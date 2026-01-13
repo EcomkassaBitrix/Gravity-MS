@@ -13,7 +13,17 @@ class Attribute
     public const ATTRIBUTE_STATUS = 'Статус создания чека';
 
     /**
-     * Наименование атрибута идентификатора чека
+     * Наименование атрибута идентификатора чека отгрузки
      */
-    public const ATTRIBUTE_ID = 'Идентификатор чека';
+    public const ATTRIBUTE_ID_DEMAND = 'Идентификатор чека';
+
+    /**
+     * Наименование атрибута идентификатора чека возврата
+     */
+    public const ATTRIBUTE_ID_SALES_RETURN = 'Идентификатор чека возврата';
+
+    /**
+     * Наименование атрибута идентификатора чека возврата
+     */
+    public const ATTRIBUTE_ID_CUSTOMER_ORDER = 'Идентификатор чека заказа';
 }

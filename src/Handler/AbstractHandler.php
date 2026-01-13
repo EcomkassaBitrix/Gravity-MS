@@ -23,6 +23,7 @@ use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\Payment;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\Position;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\Vat;
 use Ecomkassa\Moysklad\Service\StatusService;
+use Ecomkassa\Moysklad\SDK\Moysklad\Entity\Webhook\Action;
 
 /**
  * Абстрактный обработчик webhook событий от МойСклад
@@ -244,7 +245,7 @@ abstract class AbstractHandler
 
         $statusService = new StatusService($this->getLogger());
 
-        if ($statusService->alreadyStored($entity)) {
+        if (($this->getAction() != Action::CREATE) && $statusService->alreadyStored($entity)) {
             $this->getLogger()->warning('Чек уже создавался и не будет создан повторно', ['entity' => $entity]);
         } else {
             $response = $ecomApi->send($check, $groupCode, $operation, $login, $password);
@@ -252,7 +253,8 @@ abstract class AbstractHandler
             $this->getLogger()->info('Ответ сервиса: ' . json_encode($response));
 
             if ($response) {
-                $statusService->store($entity, $response);
+                $force = ($this->getAction() === Action::CREATE);
+                $statusService->store($entity, $response, $force);
             }
         }
     }
