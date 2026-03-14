@@ -26,4 +26,9 @@ class Attribute
      * Наименование атрибута идентификатора чека возврата
      */
     public const ATTRIBUTE_ID_CUSTOMER_ORDER = 'Идентификатор чека заказа';
+
+    /**
+     * Наименование атрибута кода маркировки с криптохвостом
+     */
+    public const ATTRIBUTE_ID_TRACKING_CODE = 'Код маркировки с криптохвостом';
 }

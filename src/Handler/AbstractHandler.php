@@ -8,6 +8,7 @@ use Ecomkassa\Moysklad\SDK\Moysklad\JsonApi;
 use Ecomkassa\Moysklad\SDK\Moysklad\Helper;
 use Ecomkassa\Moysklad\SDK\Moysklad\Service\DocumentService;
 use Ecomkassa\Moysklad\SDK\Moysklad\Entity\Webhook\Type;
+use Ecomkassa\Moysklad\SDK\Moysklad\Attribute;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Operation;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\MarkCodeDetector;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Response\MarkVerifyResponse;
@@ -17,6 +18,7 @@ use Ecomkassa\Moysklad\SDK\Ecomkassa\Response\MarkVerify\RequestInfo;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\EcomApi;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt;
+use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\MarkCode;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\Client;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\Company;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\Payment;
@@ -24,6 +26,7 @@ use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\Position;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check\Receipt\Vat;
 use Ecomkassa\Moysklad\Service\StatusService;
 use Ecomkassa\Moysklad\SDK\Moysklad\Entity\Webhook\Action;
+use Ecomkassa\Moysklad\Service\PopupService;
 
 /**
  * Абстрактный обработчик webhook событий от МойСклад
@@ -153,7 +156,7 @@ abstract class AbstractHandler
 
         $company = new Company();
  
-        $company->setSno($sno)->setEmail($storeEmail)->setInn($inn)->setPaymentAddress($address);
+        $company->setSno('osn')->setEmail($storeEmail)->setInn($inn)->setPaymentAddress($address);
         $receipt->setCompany($company);
 
         $total = $this->getSum($entity);
@@ -259,6 +262,41 @@ abstract class AbstractHandler
         }
     }
 
+    public function applyLocalMarkCode(Position $position, Event $event, object $entity, object $row): void
+    {
+        $type = $event->getMeta()->getType();
+        $entityId = $entity->id;
+        $positionId = $row->id;
+
+        $this->getLogger()->info('Добавление локального код маркировки', [
+                'type' => $type,
+                'entity_id' => $entityId,
+                'position_id' => $positionId,
+        ]);
+
+        $popupService = new PopupService($this->getLogger());
+        $code = $popupService->getCodeByPosition($type, $entityId, $positionId);
+
+        if ($code) {
+            $markCodeDetector = new MarkCodeDetector();
+            $markCode = $markCodeDetector->retrieveMarkCodeByStr($code['code']);
+            $position->setMarkCode($markCode);
+
+            $this->getLogger()->info('Код найден',[
+                'type' => $type,
+                'entity_id' => $entityId,
+                'position_id' => $positionId,
+                'code' => $code,
+            ]);
+        } else {
+            $this->getLogger()->warning('Код не найден',[
+                'type' => $type,
+                'entity_id' => $entityId,
+                'position_id' => $positionId,
+            ]);
+        }
+    }
+
     /**
      * Применение кода маркировки к позиции
      *
@@ -271,33 +309,76 @@ abstract class AbstractHandler
      */
     public function applyMarkCode(Position $position, Event $event, object $entity, object $row, JsonApi $jsonApi): void
     {
-        if ($event->getMeta()->getType() != Type::DEMAND) {
+        if (!in_array($event->getMeta()->getType(), [Type::DEMAND, Type::CUSTOMER_ORDER])) {
 
             return ;
         }
+
+        $this->applyLocalMarkCode($position, $event, $entity, $row);
+
+        return ;
 
         $markCodeDetector = new MarkCodeDetector();
 
         $url = $jsonApi->fetchTrackingCodesUrl($event->getMeta()->getType(), $entity->id, $row->id);
 
-        $this->getLogger()->info('URL маркировки: ' . json_encode($url, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
+        $this->getLogger()->info('URL маркировки: ' . json_encode($url, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-        $tracking = $jsonApi->getByHref($url);
-        $this->getLogger()->info('Маркировка: ' . json_encode($tracking, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
-        $trackingRows = $tracking?->rows;
-        if (is_array($trackingRows)) {
-            foreach ($trackingRows as $trackingRow) {
-                $cis = $trackingRow?->cis;
+        $hasMarkCode = false;
 
-                if (!empty($cis)) {
-                    $this->getLogger()->info('Определена маркировка: ' . json_encode($cis, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
+        $object = $jsonApi->getByHref($row?->assortment?->meta?->href);
 
-                    $markCode = $markCodeDetector->retrieveMarkCodeByStr($cis);
+        if ($object) {
 
-                    if ($markCode) {
-                        $this->getLogger()->info('Определен код маркировки: ' . json_encode($markCode->toArray(), JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
+            $this->getLogger()->info('Объект маркировки: ' . json_encode($entity, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            $this->getLogger()->info('Товар: ' . json_encode($object, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
+            $objectAttributes = $object->attributes ?? [];
+
+            $this->getLogger()->info('Атрибуты товара: ' . json_encode($objectAttributes, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+            if (is_array($objectAttributes)) {
+                foreach ($objectAttributes as $objectAttribute) {
+                    if ($objectAttribute->name == Attribute::ATTRIBUTE_ID_TRACKING_CODE) {
+
+                        $this->getLogger()->info('Найден атрибут маркировки с криптохвостом: ' . json_encode($objectAttribute, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+                        $code = $objectAttribute->value;
+
+                        $this->getLogger()->info('Найден код маркировки с криптохвостом: ' . json_encode($code, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+                        $markCode = $markCodeDetector->retrieveMarkCodeByStr($code);
                         $position->setMarkCode($markCode);
+
+                        $this->getLogger()->info('Определена маркировка с криптохвостом: ' . json_encode($markCode, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+                        $hasMarkCode = true;
+                    }
+                }
+            }
+        }
+
+        if ($hasMarkCode === false) {
+            $tracking = $jsonApi->getByHref($url);
+
+            $this->getLogger()->info('Маркировка: ' . json_encode($tracking, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
+
+            $trackingRows = $tracking?->rows;
+
+            if (is_array($trackingRows)) {
+                foreach ($trackingRows as $trackingRow) {
+                    $cis = $trackingRow?->cis;
+
+                    if (!empty($cis)) {
+                        $this->getLogger()->info('Определена маркировка: ' . json_encode($cis, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
+
+                        $markCode = $markCodeDetector->retrieveMarkCodeByStr($cis);
+
+                        if ($markCode) {
+                            $this->getLogger()->info('Определен код маркировки: ' . json_encode($markCode->toArray(), JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE));
+
+                            $position->setMarkCode($markCode);
+                        }
                     }
                 }
             }

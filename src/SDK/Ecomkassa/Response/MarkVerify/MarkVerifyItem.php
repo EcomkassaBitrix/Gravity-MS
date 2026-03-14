@@ -230,6 +230,13 @@ class MarkVerifyItem
         return $this->gsMarkCode;
     }
     
+    public function getGsMarkCodeNormalized(): ?string
+    {
+        $s = $this->getGsMarkCode();
+
+        return $s;
+    }
+
     /**
      * Устанавливает GS код маркировки.
      * 

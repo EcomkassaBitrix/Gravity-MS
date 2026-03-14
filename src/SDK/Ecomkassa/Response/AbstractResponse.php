@@ -49,7 +49,7 @@ abstract class AbstractResponse
 
         if ($response instanceof Response) {
 
-            return $response->getBody()->getContents();
+            return $response->getBody();
         }
 
         return null;

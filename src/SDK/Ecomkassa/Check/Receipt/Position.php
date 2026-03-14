@@ -148,12 +148,12 @@ class Position
      *
      * @return array Массив с информацией о позиции
      */
-    public function toArray(): array
+    public function toArray(array $replace = []): array
     {
         $a = [
             'name' => $this->getName(),
-            'price' => round($this->getPrice(), 2),
-            'sum' => round($this->getSum(), 2),
+            'price' => round(($this->getPrice() ?? 0), 2),
+            'sum' => round(($this->getSum() ?? 0), 2),
             'quantity' => $this->getQuantity(),
             'measure' => $this->getMeasure(),
             'payment_method' => $this->getPaymentMethod(),
@@ -161,7 +161,7 @@ class Position
             'vat' => $this->getVat()?->toArray(),
         ];
 
-        $markCode = $this->getMarkCode()?->toArray();
+        $markCode = $this->getMarkCode()?->toArray($replace);
 
         if (!empty($markCode)) {
             $a['mark_code'] = $markCode;

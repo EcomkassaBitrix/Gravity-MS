@@ -1,0 +1,104 @@
+INPUT[type="text"] {
+    line-height: 22px;
+}
+.ui-table INPUT[type="text"],
+.ui-table INPUT[type="number"] {
+    width: 100%;
+    line-height: 22px;
+}
+
+.ui-table .delete {
+    font-weight: bold;
+    font-size: 28px;
+    color: red;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.add {
+    width: 100%;
+}
+
+.footer-buttons {
+    margin-top: 20px;
+}
+
+.search-block {
+    position: relative;
+}
+
+.result {
+    position: absolute;
+    background-color: white;
+    padding: 0px 0px;
+    font-size: 13px;
+    line-height: 27px;
+    width: 100%;
+    background-color: #f7f9fe;
+    border-bottom: 1px solid silver;
+    border-left: 1px solid silver;
+    border-right: 1px solid silver;
+    max-height: 200px;
+    overflow: auto;
+    margin-bottom: 13px;
+    display: none;
+}
+
+.result.empty {
+    display: none;
+}
+
+.result.show {
+    display: block;
+}
+
+.result.notfound,
+.result.empty {
+    display: grid;
+    background: repeating-linear-gradient(45deg, white 0, white 3px, #f1f1f1 4px, #f1f1f1 8px);
+    vertical-align: middle;
+}
+.result.notfound:before,
+.result.empty:before {
+    content: 'Введите наименование товара или код маркировки для поиска товаров.';
+    background-color: #ffffffb8;
+    text-align: center;
+    right: 0;
+    padding: 10px 15px;
+    display: block;
+    line-height: 23px;
+    margin: auto;
+    position: relative;
+}
+
+.result.notfound:before {
+    content: 'Не найдено.';
+}
+
+.result .product {
+    cursor: pointer;
+    color: #186999;
+    padding: 0px 10px;
+}
+
+.result .product:hover {
+    background-color: #cfe1f3;
+}
+
+.errors {
+    color: #cf0000;
+    font-size: 12px;
+}
+
+.ui-table tbody td.markcode-status.markcode-status-unknown {
+
+}
+
+.ui-table tbody td.markcode-status.markcode-status-success {
+    color: green;
+}
+
+.ui-table tbody td.markcode-status.markcode-status-failure {
+    color: red;
+}

@@ -52,7 +52,7 @@ class Check
      *
      * @return array
      */
-    public function toArray(): array
+    public function toArray(array $replace = []): array
     {
        return [
             'timestamp' => $this->getTimestamp()?->format('d.m.Y H:i:s'),
@@ -60,7 +60,7 @@ class Check
             'service' => [
                 'callback_url' => $this->getCallbackUrl(),
             ],
-            'receipt' => $this->getReceipt()?->toArray() ?? null,
+            'receipt' => $this->getReceipt()?->toArray($replace) ?? null,
         ];
     }
 

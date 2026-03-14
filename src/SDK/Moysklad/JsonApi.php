@@ -166,7 +166,6 @@ class JsonApi
 
             if (!empty($body)) {
                 $data = json_decode($body);
-
                 $errors = $data?->errors ?? null;
 
                 if (is_array($errors)) {
@@ -179,7 +178,7 @@ class JsonApi
 
                 if (json_last_error() != JSON_ERROR_NONE) {
 
-                    throw new Exception();
+                    throw new Exception(json_last_error_msg() . ': ' . htmlspecialchars_decode($body));
                 }
             }
 
@@ -206,13 +205,20 @@ class JsonApi
      * Получает список объектов заданного типа
      *
      * @param string $entity Тип сущности
+     * @param array $params Параметры GET-запроса
      * @return mixed Результат запроса
      */
-    function getObjects($entity)
+    function getObjects($entity, array $params = [])
     {
+        $url = $this->getJsonApiUrl() . '/entity/' . $entity;
+
+        if (!empty($params)) {
+            $url .= '?' . http_build_query($params);
+        }
+
         return $this->makeHttpRequest(
             'GET',
-            $this->getJsonApiUrl() . '/entity/' . $entity,
+            $url,
             $this->getAccessToken());
     }
 
@@ -263,6 +269,37 @@ class JsonApi
             json_encode([
                 'attributes' => $attributes,
             ]));
+    }
+
+    public function updatePositionsInEntity($entity, $id, $positions)
+    {
+        return $this->makeHttpRequest(
+            'PUT',
+            $this->getJsonApiUrl() . '/entity/' . $entity . '/' . $id,
+            $this->getAccessToken(),
+            json_encode([
+                'positions' => $positions,
+            ]));
+    }
+
+    public function updateTrackingCodeInEntity($entity, $id, $position, $codes)
+    {
+        return $this->makeHttpRequest(
+            'PUT',
+            $this->getJsonApiUrl() . '/entity/' . $entity . '/' . $id . '/positions/' . $position . '/trackingCodes',
+            $this->getAccessToken(),
+            json_encode($codes)
+        );
+    }
+
+    public function createTrackingCodeInEntity($entity, $id, $position, $codes)
+    {
+        return $this->makeHttpRequest(
+            'POST',
+            $this->getJsonApiUrl() . '/entity/' . $entity . '/' . $id . '/positions/' . $position . '/trackingCodes',
+            $this->getAccessToken(),
+            json_encode($codes)
+        );
     }
 
     /**

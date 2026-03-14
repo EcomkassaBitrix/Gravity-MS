@@ -174,7 +174,7 @@ class MarkCode
      *
      * @return array
      */
-    public function toArray(): array
+    public function toArray(array $replace = []): array
     {
         $result = [];
 
@@ -200,7 +200,7 @@ class MarkCode
 
         if ($this->getGs1m() !== null) {
             $s = $this->getGs1m();
-            $s = str_replace(' ', chr(29), $s);
+            $s = str_replace('\\u001D', chr(29), $s);
 
             $result['gs1m'] = base64_encode($s);
         }

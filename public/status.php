@@ -59,16 +59,143 @@ BODY {
 .time * {
     font-size: inherit;
 }
-
+.buttons {
+    margin-bottom: 10px;
+}
 </style>
+    <link rel="stylesheet" href="css/uikit.min.css">
+
+<script>
+
+function sendClear()
+{
+    window.parent.postMessage({
+        name: 'UpdateRequest',
+        messageId: Math.round(1000000 * Math.random()),
+        updateState: {
+            vatIncluded: true,
+            positions: [],
+        }
+    }, '*');
+}
+
+function openPopup()
+{
+    window.parent.postMessage({
+        name: 'ShowPopupRequest',
+        messageId: Math.round(1000000 * Math.random()),
+        popupName: 'productsWindow',
+        popupParameters: {
+            extensionPoint: window.extensionPoint,
+            objectId: window.objectId,
+        },
+    }, '*');
+}
+
+function refreshProduct(product) {
+    console.log('Обновление товара', product);
+    window.parent.postMessage({
+        "name":"UpdateRequest",
+        "messageId": Math.round(1000000 * Math.random()),
+        "updateState":{
+            "vatIncluded": true,
+            "positions": [
+                {
+                    "quantity": product.quantity,
+                    "price": 3000,
+                    "assortment": {
+                        "meta": {
+                            "href": "https://api.moysklad.ru/api/remap/1.2/entity/product/" + product.id,
+                            "type": "product"
+                        }
+                    }
+                }
+            ]
+        }
+    });
+
+//UpdateRequest
+
+}
+
+function refreshProducts(products) {
+    if (products) {
+        // Обновление и добавление товаров
+        let positions = new Array();
+
+        products.forEach(function(product) {
+            let position = {};
+
+            if (product.new === true) {
+
+                position = {
+                    quantity: parseFloat(product.quantity),
+                    price: product.price,
+                    assortment: {
+                        meta: {
+                            href: 'https://api.moysklad.ru/api/remap/1.2/entity/product/' + product.id,
+                            type: 'product',
+                        }
+                    }
+                };
+
+            } else {
+                position = {
+                    id: product.id,
+                    quantity: parseFloat(product.quantity),
+                };
+            }
+
+            positions.push(position);
+        });
+
+        window.parent.postMessage({
+            'name':'UpdateRequest',
+            'messageId': Math.round(1000000 * Math.random()),
+            'updateState':{
+                'vatIncluded': true,
+                'positions': positions
+            }
+        }, '*');
+    }
+}
+
+</script>
 </head>
 <body>
+
+<div class="buttons">
+    <input class="button button--success" href="javascript:" onclick="openPopup();" value="Редактировать товары" />
+</div>
 <script>
 
 window.addEventListener('message', function(event) {
-    console.log(event.data);
+    console.log('Входящее сообщение для iframe ', event.data);
+
+    if (event.data.name === 'InvalidMessageError') {
+        window.parent.postMessage({
+            name: 'ShowDialogRequest',
+            messageId: Math.round(1000000 * Math.random()),
+            dialogText: 'На странице обнаружен устаревший перечень товаров. Перезагрузите страницу.',
+            buttons: [{
+                name: 'OK',
+                caption: 'Хорошо',
+            }],
+        }, '*');
+    }
+
+    if (event.data.name === 'ShowPopupResponse') {
+        if (event.data.popupName === 'productsWindow') {
+//            refreshProducts(event.data.popupResponse);
+        }
+    }
+
     if (event.data.name === 'Save' || event.data.name === 'Open') {
         const urlParams = new URLSearchParams(window.location.search);
+
+        window.extensionPoint = event.data.extensionPoint;
+        window.objectId = event.data.objectId;
+
         const qs = new URLSearchParams({
             contextKey: urlParams.get('contextKey'),
             appUid: urlParams.get('appUid'),

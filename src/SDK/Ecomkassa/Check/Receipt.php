@@ -51,7 +51,7 @@ class Receipt
      *
      * @return array Содержание чека в виде массива
      */
-    public function toArray(): array
+    public function toArray(array $replace = []): array
     {
         $a = $this->getPayments();
         $payments = [];
@@ -67,7 +67,7 @@ class Receipt
             'company' => $this->getCompany()?->toArray(),
             'payments' => $payments,
             'items' => $this->getItems(),
-            'total' => round($this->getTotal(), 2),
+            'total' => round(($this->getTotal() ?? 0), 2),
         ];
 
         return $a;

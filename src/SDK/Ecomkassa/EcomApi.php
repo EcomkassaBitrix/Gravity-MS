@@ -87,7 +87,9 @@ class EcomApi
         $accessToken = $this->requestAccessToken($login, $password);
 
         $url = $this->fetchEcomkassaMarkVerifyUrl($groupCode, $operation, $accessToken);
-        $data = $check->toArray();
+        $data = $check->toArray($replace = [
+            '\u001D' => chr(29),
+        ]);
 
         $response = $client->post($url, [
             'json' => $data,
@@ -95,6 +97,10 @@ class EcomApi
         ]);
 
         $this->getLogger()?->info('Данные, отправляемые для проверки маркировки "Честный знак"', $data ?? []);
+        $this->getLogger()?->info('Ответ, полученный при проверке маркировки "Честный знак"', [
+            'url' => $url,
+            'response' => $response->getBody(),
+        ]);
 
         return new MarkVerifyResponse($response);
     }
@@ -123,8 +129,12 @@ class EcomApi
         ]);
 
         $this->getLogger()?->info('Данные, отправляемые для регистрации чека', $data ?? []);
+        $this->getLogger()?->info('Ответ, полученный из Екомкасса', [
+            'url' => $url,
+            'response' => $response->getBody(),
+        ]);
 
-        return json_decode($response->getBody()->getContents(), true);
+        return json_decode($response->getBody(), true);
     }
 
     /**
