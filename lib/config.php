@@ -14,9 +14,25 @@ $absolutePathToEnvFile = __DIR__ . '/../.env';
 const LOG_LEVEL = 'DEBUG';
 //const LOG_LEVEL = 'INFO';
 
+$secretKey = getenv('SECRET_KEY');
+$appId = getenv('APP_ID');
+$appUid = getenv('APP_UID');
+
+$incomingAppId = $_REQUEST['appId'] ?? null;
+
+if ($incomingAppId !== null) {
+    $testAppId = getenv('TEST_APP_ID');
+
+    if ($incomingAppId == $testAppId) {
+        $appId = $testAppId;
+        $appUid = getenv('TEST_APP_UID');
+        $secretKey = getenv('TEST_SECRET_KEY');
+    }
+}
+
 return [
-    'appId' => getenv('APP_ID'),
-    'appUid' => getenv('APP_UID'),
+    'appId' => $appId,
+    'appUid' => $appUid,
     'appBaseUrl' => getenv('APP_BASE_URL'),
-    'secretKey' => getenv('SECRET_KEY'),
+    'secretKey' => $secretKey,
 ];
