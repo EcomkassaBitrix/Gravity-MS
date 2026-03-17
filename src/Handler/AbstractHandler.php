@@ -2,6 +2,7 @@
 
 namespace Ecomkassa\Moysklad\Handler;
 
+use Throwable;
 use Monolog\Logger;
 use Ecomkassa\Moysklad\SDK\Moysklad\Entity\Webhook\Event;
 use Ecomkassa\Moysklad\SDK\Moysklad\JsonApi;
@@ -274,22 +275,31 @@ abstract class AbstractHandler
                 'position_id' => $positionId,
         ]);
 
-        $popupService = new PopupService($this->getLogger());
-        $code = $popupService->getCodeByPosition($type, $entityId, $positionId);
+        try {
+            $popupService = new PopupService($this->getLogger());
+            $code = $popupService->getCodeByPosition($type, $entityId, $positionId);
 
-        if ($code) {
-            $markCodeDetector = new MarkCodeDetector();
-            $markCode = $markCodeDetector->retrieveMarkCodeByStr($code['code']);
-            $position->setMarkCode($markCode);
+            if ($code) {
+                $markCodeDetector = new MarkCodeDetector();
+                $markCode = $markCodeDetector->retrieveMarkCodeByStr($code['code']);
+                $position->setMarkCode($markCode);
 
-            $this->getLogger()->info('Код найден',[
-                'type' => $type,
-                'entity_id' => $entityId,
-                'position_id' => $positionId,
-                'code' => $code,
-            ]);
-        } else {
-            $this->getLogger()->warning('Код не найден',[
+                $this->getLogger()->info('Код найден',[
+                    'type' => $type,
+                    'entity_id' => $entityId,
+                    'position_id' => $positionId,
+                    'code' => $code,
+                ]);
+            } else {
+                $this->getLogger()->warning('Код не найден',[
+                    'type' => $type,
+                    'entity_id' => $entityId,
+                    'position_id' => $positionId,
+                ]);
+            }
+        } catch (Throwable $exception) {
+            $this->getLogger()->error('Ошибка при определение кода маркировки', [
+                'error' => $exception->getMessage(),
                 'type' => $type,
                 'entity_id' => $entityId,
                 'position_id' => $positionId,
