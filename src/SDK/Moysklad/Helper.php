@@ -97,6 +97,10 @@ class Helper
             if ($file->isFile()) {
                 $appId = $_REQUEST['appId'] ?? null;
 
+                if (empty($appId)) {
+                    $appId = getenv('APP_ID');
+                }
+
                 if (in_array($appId, [getenv('APP_ID'), getenv('TEST_APP_ID')]) && (strpos($file->getFilename(), $appId) !== false))  {
                     if (strpos($file->getFilename(), $accountId) !== false) {
                         require_once __DIR__ . '/../../../lib/lib.php';

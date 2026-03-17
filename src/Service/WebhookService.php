@@ -2,6 +2,7 @@
 
 namespace Ecomkassa\Moysklad\Service;
 
+use Throwable;
 use Ecomkassa\Moysklad\SDK\Moysklad\Entity\Webhook;
 use Ecomkassa\Moysklad\Handler\AbstractHandler;
 use Ecomkassa\Moysklad\SDK\Moysklad\JsonApi;
@@ -100,14 +101,35 @@ class WebhookService extends AbstractService
                     'query_string' => $queryString,
                 ]);
 
-
             $obj = null;
-            $jsonApi = $this->getJsonApiByEvent($event);
 
-            if ($jsonApi) {
-                $href = $event->getMeta()->getHref();
-                $obj = $jsonApi->getByHref($href);
+            try {
+                $jsonApi = $this->getJsonApiByEvent($event);
+
+                if ($jsonApi) {
+                    $href = $event->getMeta()->getHref();
+                    $obj = $jsonApi->getByHref($href);
+                }
+            } catch (Throwable $exception) {
+                $this->getLogger()->error(sprintf('Ошибка при обработке входящего вебхук %s.%s, accountId=%s',
+                    $event->getMeta()->getType(),
+                    $event->getAction(),
+                    $event->getAccountId()),
+                    [
+                        'error' => $exception->getMessage(),
+                        'content' => $content,
+                        'query_string' => $queryString,
+                    ]);
             }
+
+            $this->getLogger()->info(sprintf('Поиск обработчика для входящего вебхука %s.%s, accountId=%s',
+                $event->getMeta()->getType(),
+                $event->getAction(),
+                $event->getAccountId()),
+                [
+                    'content' => $content,
+                    'query_string' => $queryString,
+                ]);
 
             foreach ($this->getHandlers() as $handler) {
                 if ($handler instanceof AbstractHandler) {
@@ -120,6 +142,17 @@ class WebhookService extends AbstractService
                     ->setLogger($this->getLogger());
 
                 if ($handler->supports($event)) {
+
+                    $this->getLogger()->info(sprintf('Найден обработчик для входящего вебхука %s.%s, accountId=%s',
+                        $event->getMeta()->getType(),
+                        $event->getAction(),
+                        $event->getAccountId()),
+                        [
+                            'handler' => $handler::class,
+                            'content' => $content,
+                            'query_string' => $queryString,
+                        ]);
+
                     $handler->run($event);
                 }
             }
