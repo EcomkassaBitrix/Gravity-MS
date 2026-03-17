@@ -156,8 +156,8 @@ abstract class AbstractHandler
         $receipt->setClient($client);
 
         $company = new Company();
- 
-        $company->setSno('osn')->setEmail($storeEmail)->setInn($inn)->setPaymentAddress($address);
+
+        $company->setSno($sno)->setEmail($storeEmail)->setInn($inn)->setPaymentAddress($address);
         $receipt->setCompany($company);
 
         $total = $this->getSum($entity);
