@@ -200,7 +200,7 @@ class PopupService extends AbstractService
         $connection = $connectionService->getConnection();
         $queryBuilder = $connection->createQueryBuilder();
 
-        return $queryBuilder
+        $result = $queryBuilder
             ->select('c.code', 'c.checked', 'pc.position_id as position_id', 'c.id')
             ->from('codes', 'c')
             ->innerJoin('c', 'position_codes', 'pc', 'c.id = pc.code_id')
@@ -213,6 +213,13 @@ class PopupService extends AbstractService
             ->setParameter('position_id', $positionId)
             ->executeQuery()
             ->fetchAllAssociative();
+
+        if ($result) {
+
+            return $result;
+        }
+
+        return null;
     }
 
     public function getCodeByPosition(string $entity, string $objectId, string $positionId): ?array
@@ -221,7 +228,7 @@ class PopupService extends AbstractService
         $connection = $connectionService->getConnection();
         $queryBuilder = $connection->createQueryBuilder();
 
-        return $queryBuilder
+        $result = $queryBuilder
             ->select('c.code', 'pc.position_id as position_id', 'c.id')
             ->from('codes', 'c')
             ->innerJoin('c', 'position_codes', 'pc', 'c.id = pc.code_id')
@@ -234,6 +241,13 @@ class PopupService extends AbstractService
             ->setParameter('position_id', $positionId)
             ->executeQuery()
             ->fetchAssociative();
+
+        if ($result) {
+
+            return $result;
+        }
+
+        return null;
     }
 
     public function savePosition(string $entity, string $objectId, array $item): void
