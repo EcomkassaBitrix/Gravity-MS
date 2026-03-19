@@ -31,18 +31,33 @@ $logger->info('Получен запрос на получение списка 
 header('Cache-Control: no-cache');
 header('Content-Type: application/json;charset=utf-8');
 
-$popupService = new PopupService($logger);
-$popupService->setContextKey($contextKey)
-    ->setAppUid($appUid)
-    ->setAppId($appId);
+try {
+    $popupService = new PopupService($logger);
+    $popupService->setContextKey($contextKey)
+        ->setAppUid($appUid)
+        ->setAppId($appId);
 
-$items = $popupService->getProductsByEntity([
-    'extensionPoint' => $data['extensionPoint'],
-    'objectId' => $data['objectId'],
-]);
+    $items = $popupService->getProductsByEntity([
+        'extensionPoint' => $data['extensionPoint'],
+        'objectId' => $data['objectId'],
+    ]);
 
-$response = [
-    'items' => $items,
-];
+    $response = [
+        'items' => $items,
+    ];
+
+} catch (\Throwable $exception) {
+    $logger->error('Ошибка при получении списка товаров: ' . $exception->getMessage(), [
+        'extensionPoint' => $data['extensionPoint'],
+        'objectId' => $data['objectId'],
+        'appUid' => $appUid,
+        'appId' => $appId,
+        'contextKey' => $contextKey,
+    ]);
+
+    $response = [
+        'items' => [],
+    ];
+}
 
 print json_encode($response);
