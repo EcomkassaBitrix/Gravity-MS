@@ -4,7 +4,6 @@ namespace Ecomkassa\Moysklad\Service;
 
 use Ecomkassa\Moysklad\SDK\Moysklad\Document;
 use Ecomkassa\Moysklad\SDK\Moysklad\JsonApi;
-use Ecomkassa\Moysklad\SDK\Moysklad\Helper;
 use Ecomkassa\Moysklad\SDK\Moysklad\Attribute;
 use Ecomkassa\Moysklad\SDK\Moysklad\Entity\Webhook\Type;
 
@@ -34,7 +33,7 @@ class StatusService extends AbstractService
      * Возвращает значение атрибута из объекта сущности
      *
      * @param object $object Объект сущности
-     * @param string $name Наименование атрибута
+     * @param string $name Наименование атрибут
      * @return null|string Значение атрибута
      */
     public function fetchAttributeValueFromObject($object, $name)
@@ -65,7 +64,8 @@ class StatusService extends AbstractService
      */
     public function getStatusText($appId, $appUid, $contextKey, $extensionPoint, $objectId): ?string
     {
-        $jsonApi = $this->getJsonApi($appId);
+        $accountId = JsonApi::getAccountIdByContextKey($contextKey);
+        $jsonApi = $this->getJsonApi($accountId);
 
         $type = match($extensionPoint) {
             Document::DOCUMENT_DEMAND_EDIT => Type::DEMAND,
@@ -282,20 +282,5 @@ class StatusService extends AbstractService
         }
 
         return Attribute::ATTRIBUTE_ID_DEMAND;
-    }
-
-    /**
-     * Получение экземпляра JsonApi
-     *
-     * @param string $accountId Идентификатор аккаунта
-     * @return JsonApi Экземпляр JsonApi
-     */
-    public function getJsonApi(string $appUid)
-    {
-        $accessToken = Helper::getAccessTokenByAccountId($appUid);
-        $jsonApi = new JsonApi($accessToken);
-        $jsonApi->selectJsonApi();
-
-        return $jsonApi;
     }
 }

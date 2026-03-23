@@ -48,21 +48,6 @@ class WebhookService extends AbstractService
     private array $handlers = [];
 
     /**
-     * Получение экземпляра JsonApi
-     *
-     * @param string $accountId Идентификатор аккаунта
-     * @return JsonApi Экземпляр JsonApi
-     */
-    public function getJsonApi(string $accountId)
-    {
-        $accessToken = Helper::getAccessTokenByAccountId($accountId);
-        $jsonApi = new JsonApi($accessToken);
-        $jsonApi->selectJsonApi();
-
-        return $jsonApi;
-    }
-
-    /**
      * Получение экземпляра JsonApi по событию
      *
      * @param Event $event Событие webhook

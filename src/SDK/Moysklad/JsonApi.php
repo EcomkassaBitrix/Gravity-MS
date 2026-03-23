@@ -3,6 +3,7 @@
 namespace Ecomkassa\Moysklad\SDK\Moysklad;
 
 use Exception;
+use Firebase\JWT\JWT;
 use Ecomkassa\Moysklad\SDK\Moysklad\Exception\ApplicationUnavailableException;
 use Ecomkassa\Moysklad\SDK\Moysklad\Exception\ApiException;
 
@@ -16,6 +17,8 @@ class JsonApi
      * URL API поставщика (vendor API)
      */
     public const VENDOR_API_URL = 'https://apps-api.moysklad.ru/api/remap/1.2';
+
+    public const ORIGIN_VENDOR_API_URL = 'https://apps-api.moysklad.ru/api/vendor/1.0';
 
     /**
      * Основной URL JSON API Moysklad
@@ -38,7 +41,7 @@ class JsonApi
      *
      * @param string|null $accessToken Токен доступа к API
      */
-    public function __construct(private ?string $accessToken)
+    public function __construct(private ?string $accessToken = null)
     {
     }
 
@@ -116,7 +119,7 @@ class JsonApi
      * @throws Exception В случае ошибки выполнения запроса
      * @throws ApplicationUnavailableException В случае временной недоступности приложения
      */
-    public function makeHttpRequest(string $method, string $url, ?string $bearerToken, $data = null)
+    public function makeHttpRequest(string $method, string $url, ?string $bearerToken = null, $data = null)
     {
         $curl = curl_init($url);
 
@@ -391,4 +394,53 @@ class JsonApi
     {
         return sprintf(static::TRACKING_CODES_URL, $type, $entityId, $rowId);
     }
+
+    function buildJWT($appUid, $secretKey)
+    {
+        $token = array(
+            "sub" => $appUid,
+            "iat" => time(),
+            "exp" => time() + 300,
+            "jti" => bin2hex(random_bytes(32))
+        );
+
+        return JWT::encode($token, $secretKey, 'HS256');
+    }
+
+    public function getContext($contextKey)
+    {
+        $appUid = getenv('APP_UID');
+        $secretKey = getenv('SECRET_KEY');
+
+        $jwt = $this->buildJWT($appUid, $secretKey);
+
+        return $this->makeHttpRequest(
+            'POST',
+            self::ORIGIN_VENDOR_API_URL . '/context/' . $contextKey,
+            $jwt
+        );
+    }
+
+    public static function getAccountIdByContextKey(?string $contextKey): ?string
+    {
+        if (empty($contextKey)) {
+
+            return null;
+        }
+
+        $jsonApi = new self();
+        $data = $jsonApi->getContext($contextKey);
+
+        if (is_object($data)) {
+            $accountId = $data->accountId ?? null;
+
+            if (is_string($accountId)) {
+
+                return $accountId;
+            }
+        }
+
+        return null;
+    }
+
 }

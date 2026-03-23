@@ -29,6 +29,8 @@ $objectId = $_REQUEST['objectId'] ?? null;
 $messageId = $_REQUEST['messageId'] ?? null;
 
 $statusService = new StatusService($logger);
+$statusService->setContextKey($contextKey);
+$statusService->setAppId($appId);
 $statusText = $statusService->getStatusText($appId, $appUid, $contextKey, $extensionPoint, $objectId);
 
 print json_encode([

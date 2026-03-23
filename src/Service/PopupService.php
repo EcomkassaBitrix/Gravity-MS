@@ -22,10 +22,6 @@ use Ecomkassa\Moysklad\SDK\Moysklad\Entity\Webhook\Type;
 
 class PopupService extends AbstractService
 {
-    protected $contextKey;
-    protected $appUid;
-    protected $appId;
-
     public function saveProducts($extensionPoint, $objectId, $items): bool
     {
         $this->getLogger()->info('Сохранение товаров с кодами маркировки', [
@@ -124,7 +120,8 @@ class PopupService extends AbstractService
     public function getProductsByEntity(array $options = []): ?array
     {
         $appId = $this->getAppId();
-        $jsonApi = $this->getJsonApi($appId);
+        $accountId = JsonApi::getAccountIdByContextKey($this->getContextKey());
+        $jsonApi = $this->getJsonApi($accountId);
         $objectId = $options['objectId'] ?? null;
         $extensionPoint = $options['extensionPoint'] ?? null;
         $entity = $this->getEntityKeyByExtensionPoint($extensionPoint);
@@ -334,42 +331,6 @@ class PopupService extends AbstractService
         return null;
     }
 
-    public function getContextKey()
-    {
-        return $this->contextKey;
-    }
-
-    public function setContextKey($contextKey)
-    {
-        $this->contextKey = $contextKey;
-
-        return $this;
-    }
-
-    public function getAppUid()
-    {
-        return $this->appUid;
-    }
-
-    public function setAppUid($appUid)
-    {
-        $appUid = $this->appUid;
-
-        return $this;
-    }
-
-    public function getAppId()
-    {
-        return $this->appId;
-    }
-
-    public function setAppId($appId)
-    {
-        $this->appId = $appId;
-
-        return $this;
-    }
-
     public function fetchSellPrice($product): ?float
     {
         if ($product) {
@@ -403,8 +364,8 @@ class PopupService extends AbstractService
 
     public function getProductsByTerm(string $term, int $limit): array
     {
-        $appId = $this->getAppId();
-        $jsonApi = $this->getJsonApi($appId);
+        $accountId = JsonApi::getAccountIdByContextKey($this->getContextKey());
+        $jsonApi = $this->getJsonApi($accountId);
         $objects = $jsonApi->getObjects('product', ['search' => $term]);
 
         $items = [];
@@ -433,8 +394,8 @@ class PopupService extends AbstractService
 
     public function getProductsByTrackingCode($trackingCode, $limit): array
     {
-        $appId = $this->getAppId();
-        $jsonApi = $this->getJsonApi($appId);
+        $accountId = JsonApi::getAccountIdByContextKey($this->getContextKey());
+        $jsonApi = $this->getJsonApi($accountId);
         $objects = $jsonApi->getObjects('product', ['filter' => 'trackingCodes.cis='. $trackingCode]);
 
         $items = [];
@@ -459,26 +420,11 @@ class PopupService extends AbstractService
         return $items;
     }
 
-    /**
-     * Получение экземпляра JsonApi
-     *
-     * @param string $accountId Идентификатор аккаунта
-     * @return JsonApi Экземпляр JsonApi
-     */
-    public function getJsonApi(string $appUid)
-    {
-        $accessToken = Helper::getAccessTokenByAccountId($appUid);
-        $jsonApi = new JsonApi($accessToken);
-        $jsonApi->selectJsonApi();
-
-        return $jsonApi;
-    }
-
     public function getTrackingCodeByPosition($extensionPoint, $objectId, $productId)
     {
         try {
-            $appId = $this->getAppId();
-            $jsonApi = $this->getJsonApi($appId);
+            $accountId = JsonApi::getAccountIdByContextKey($this->getContextKey());
+            $jsonApi = $this->getJsonApi($accountId);
             $entity = $this->getEntityKeyByExtensionPoint($extensionPoint);
 
             $positions = $jsonApi->getObjects($entity . '/' . $objectId . '/positions');
@@ -512,11 +458,10 @@ class PopupService extends AbstractService
         $ecomApi = new EcomApi();
         $ecomApi->setLogger($this->getLogger());
 
-        $accountId = $_REQUEST['appId'] ?? null;
+        $accountId = JsonApi::getAccountIdByContextKey($this->getContextKey());
         $app = Helper::getAppByAccountId($accountId);
 
-        $appId = $this->getAppId();
-        $jsonApi = $this->getJsonApi($appId);
+        $jsonApi = $this->getJsonApi($accountId);
 
         // Данные для отправки
         $groupCode = $app->shopId;

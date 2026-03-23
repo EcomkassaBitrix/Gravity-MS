@@ -9,6 +9,7 @@
         "phpdevcommunity/php-dotenv": "^3.0",
         "guzzlehttp/guzzle": "^7.10",
         "doctrine/dbal": "^4.4",
-        "doctrine/migrations": "^3.9"
+        "doctrine/migrations": "^3.9",
+        "firebase/php-jwt": "^7.0"
     }
 }

@@ -91,27 +91,34 @@ class Helper
     public static function getAppByAccountId(string $accountId)
     {
         $dir = __DIR__ . '/../../' . getenv('DATA_DIR') . '/';
-        $directory = new \DirectoryIterator($dir);
 
-        foreach ($directory as $file) {
-            if ($file->isFile()) {
-                $appId = $_REQUEST['appId'] ?? null;
+        $appId = $_REQUEST['appId'] ?? null;
 
-                if (empty($appId)) {
-                    $appId = getenv('APP_ID');
-                }
+        if (empty($appId)) {
+            $appId = getenv('APP_ID');
+        }
 
-                if (in_array($appId, [getenv('APP_ID'), getenv('TEST_APP_ID')]) && (strpos($file->getFilename(), $appId) !== false))  {
-                    if (strpos($file->getFilename(), $accountId) !== false) {
-                        require_once __DIR__ . '/../../../lib/lib.php';
-                        $app = unserialize(file_get_contents($file->getPathname()));
+        $pattern = '/^[a-z0-9\-]+$/i';
 
-                        if ($app) {
+        if (!preg_match($pattern, $appId)) {
 
-                            return $app;
-                        }
-                    }
-                }
+            return null;
+        }
+
+        if (!preg_match($pattern, $accountId)) {
+
+            return null;
+        }
+
+        $filename = $dir . $appId . '.' . $accountId . '.app';
+
+        if (is_file($filename) && is_readable($filename)) {
+            require_once __DIR__ . '/../../../lib/lib.php';
+            $app = unserialize(file_get_contents($filename));
+
+            if ($app) {
+
+                return $app;
             }
         }
 

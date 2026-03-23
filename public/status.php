@@ -20,7 +20,6 @@ $logger->pushHandler($streamHandler);
 
 Header('Cache-Control: no-cache');
 
-
 $appId = $_REQUEST['appId'] ?? null;
 $appUid = $_REQUEST['appUid'] ?? null;
 $contextKey = $_REQUEST['contextKey'] ?? null;
@@ -38,6 +37,8 @@ $logger->info('Запрос на получение статуса чека', [
 ]);
 
 $statusService = new StatusService($logger);
+$statusService->setContextKey($contextKey);
+$statusService->setAppId($appId);
 $statusText = $statusService->getStatusText($appId, $appUid, $contextKey, $extensionPoint, $objectId);
 
 ?><!DOCTYPE html>

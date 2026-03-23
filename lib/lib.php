@@ -2,8 +2,6 @@
 
 use \Firebase\JWT\JWT;
 
-require_once __DIR__ . '/jwt.lib.php';
-
 if (!isset($dirRoot)) {
     $dirRoot = '';
 }
@@ -76,6 +74,7 @@ function makeHttpRequest(string $method, string $url, string $bearerToken, $data
     if ($data) {
         $headers[] = 'Content-type: application/json';
     }
+
     log_message('DEBUG', "Request: $method $url" .print_r($headers, true) . print_r($data, true));
 
     $options = [
@@ -128,7 +127,8 @@ function buildJWT()
         "exp" => time() + 300,
         "jti" => bin2hex(random_bytes(32))
     );
-    return JWT::encode($token, cfg()->secretKey);
+
+    return JWT::encode($token, cfg()->secretKey, 'HS256');
 }
 
 //
