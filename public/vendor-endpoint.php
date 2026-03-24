@@ -1,6 +1,7 @@
 <?php
 
-use \Firebase\JWT\JWT;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Ecomkassa\Moysklad\Key\RsaData;
 use Ecomkassa\Moysklad\Key\Storage\RsaFileStorage;
 
@@ -134,7 +135,7 @@ function authTokenIsValid($headers): bool
     }
 
     try {
-        $decoded = JWT::decode($jwtToken, $secretKey, ["HS256"]);
+        $decoded = JWT::decode($jwtToken, new Key($secretKey, 'HS256'));
         if (empty($decoded->jti)) {
             log_message('WARN', "JTI is not set");
             return false;
