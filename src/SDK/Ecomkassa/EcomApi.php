@@ -2,6 +2,7 @@
 
 namespace Ecomkassa\Moysklad\SDK\Ecomkassa;
 
+use Exception;;
 use Monolog\Logger;
 use GuzzleHttp\Client;
 use Ecomkassa\Moysklad\SDK\Ecomkassa\Check;
@@ -333,5 +334,37 @@ class EcomApi
         $this->logger = $logger;
 
         return $this;
+    }
+
+    /**
+     * Проверяет правильность логина и пароля через получение токена от сервера Екомкасса.
+     *
+     * @param string|null $login Логин
+     * @param string|null $password Пароль
+     * @return bool
+     */
+    public function isValidCredentials(?string $login, ?string $password): bool
+    {
+        if (empty($login)) {
+
+            return false;
+        }
+
+        if (empty($password)) {
+
+            return false;
+        }
+
+        try {
+            $accessToken = $this->requestAccessToken($login, $password);
+
+            if (!empty($accessToken)) {
+
+                return true;
+            }
+        } catch (Exception $exception) {
+        }
+
+        return false;
     }
 }

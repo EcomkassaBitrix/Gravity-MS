@@ -78,7 +78,14 @@ if ($isAdmin) {
     <?php
     if (!empty($message)) {
         ?>
-    <p class="message message-success"><?= $message; ?></p>
+            <p class="message message-success"><?= $message; ?></p>
+        <?php
+    }
+    ?>
+    <?php
+    if (!empty($error)) {
+        ?>
+            <p class="message message-failure"><?= $error; ?></p>
         <?php
     }
     ?>

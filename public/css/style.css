@@ -50,6 +50,11 @@ BODY {
     color: green;
 }
 
+.message.message-failure {
+    background-color: #ffdcdc;
+    color: #800000;
+}
+
 .buttons {
     margin-bottom: 10px;
 }

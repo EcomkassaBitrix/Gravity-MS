@@ -2,14 +2,15 @@
 
 namespace Ecomkassa\Moysklad;
 
-use Ecomkassa\Moysklad\SDK\Moysklad\Exception\AbstractException;
-
+use Exception;
+use AppInstance;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use PhpDevCommunity\DotEnv;
 use Ecomkassa\Moysklad\Service\WebhookService;
 use Ecomkassa\Moysklad\Handler;
-use AppInstance;
+use Ecomkassa\Moysklad\SDK\Moysklad\Exception\AbstractException;
+use Ecomkassa\Moysklad\SDK\Ecomkassa\EcomApi;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../lib/lib.php';
@@ -62,4 +63,12 @@ try {
     exit;
 }
 
-Header('Location: iframe.php?contextKey=' . $contextKey . '&appUid=' . $appUid . '&appId=' . $appId . '&saved=1');
+$ecomApi = new EcomApi();
+
+if ($ecomApi->isValidCredentials($app->login, $app->password)) {
+    Header('Location: iframe.php?contextKey=' . $contextKey . '&appUid=' . $appUid . '&appId=' . $appId . '&saved=1');
+
+    exit;
+}
+
+Header('Location: iframe.php?contextKey=' . $contextKey . '&appUid=' . $appUid . '&appId=' . $appId . '&credentials=1');
