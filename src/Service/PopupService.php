@@ -255,6 +255,8 @@ class PopupService extends AbstractService
             return ;
         }
 
+        $item['mark'] = trim($item['mark']);
+
         $connectionService = new ConnectionService($this->getLogger());
         $connection = $connectionService->getConnection();
         $queryBuilder = $connection->createQueryBuilder();
