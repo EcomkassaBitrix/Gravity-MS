@@ -2,6 +2,7 @@
 
 namespace Ecomkassa\Moysklad\Service;
 
+use Throwable;
 use Ecomkassa\Moysklad\SDK\Moysklad\Document;
 use Ecomkassa\Moysklad\SDK\Moysklad\JsonApi;
 use Ecomkassa\Moysklad\SDK\Moysklad\Attribute;
@@ -132,13 +133,13 @@ class StatusService extends AbstractService
     }
 
     /**
-     * Возвращает true, если объект уже имеет значаение в атрибуте,
+     * Возвращает true, если объект уже имеет значение в атрибуте,
      * в котором хранится идентификатор чека.
      *
      * @param object $entity Объект сущности
      * @return bool Результат проверки
      */
-    public function alreadyStored($entity): bool
+    public function alreadyStoredInMC($entity): bool
     {
         $type = $entity?->meta?->type ?? null;
         $id = $entity?->id ?? null;
@@ -162,13 +163,115 @@ class StatusService extends AbstractService
     }
 
     /**
+     * Возвращает true, если в локальной таблице имеется чек по сущности
+     *
+     * @param object $entity Объект сущности
+     * @return bool Результат проверки
+     */
+    public function alreadyStored($entity): bool
+    {
+        $type = $entity?->meta?->type ?? null;
+        $id = $entity?->id ?? null;
+
+        $checkService = new CheckService($this->getLogger());
+
+        $type = $entity?->meta?->type ?? null;
+        $objectId = $entity?->id ?? null;
+
+        $check = $checkService->findCheck($type, $objectId);
+
+        if ($check) {
+
+            return true;
+        }
+
+        return $this->alreadyStoredInMC($entity);
+    }
+
+
+    /**
+     * Сохраняет данные чеке в базу данных
+     *
+     * @param object $entity Объект сущности
+     * @param array $response Массив данных ответа внешней системы
+     * @return bool Результат операции
+     */
+    public function store($entity, $response, bool $force = false): bool
+    {
+        try {
+            $uuid = $response['uuid'] ?? null;
+            $type = $entity?->meta?->type ?? null;
+            $objectId = $entity?->id ?? null;
+            $accountId = $entity?->accountId ?? null;
+
+            $this->getLogger()->info('Сохранение сведений о чеке в базу данных', [
+                'type' => $type,
+                'id' => $objectId,
+                'accountId' => $accountId,
+                'uuid' => $uuid,
+            ]);
+
+            if ($this->alreadyStored($entity)) {
+                $this->getLogger()->info('Обнаружены сведения о ранее созданном чеке. Сохранение отменено', [
+                    'type' => $type,
+                    'id' => $objectId,
+                    'accountId' => $accountId,
+                    'uuid' => $uuid,
+                ]);
+
+               return false;
+            } else {
+                $this->getLogger()->info('Сведений о ранее созданных чеках не обнаружено', [
+                    'type' => $type,
+                    'id' => $objectId,
+                    'accountId' => $accountId,
+                    'uuid' => $uuid,
+                ]);
+            }
+
+            $checkService = new CheckService($this->getLogger());
+
+            if ($uuid !== null) {
+                $localId = $checkService->addCheck($type, $objectId, $uuid);
+
+                $this->getLogger()->info('Сохранены сведения о чеке в базу данных', [
+                    'type' => $type,
+                    'id' => $objectId,
+                    'accountId' => $accountId,
+                    'uuid' => $uuid,
+                    'localId' => $localId,
+                ]);
+
+                return true;
+            } else {
+                $this->getLogger()->warning('Ошибка сохранения сведений о чеке в базу данных', [
+                    'type' => $type,
+                    'id' => $objectId,
+                    'accountId' => $accountId,
+                    'uuid' => $uuid,
+                ]);
+            }
+        } catch (Throwable $exception) {
+            $this->getLogger()->error('Ошибка сохранения сведений о чеке в базу данных', [
+               'exception' => $exception->getMessage(),
+               'type' => $type,
+               'id' => $objectId,
+               'accountId' => $accountId,
+               'uuid' => $uuid,
+           ]);
+        }
+
+        return false;
+    }
+
+    /**
      * Сохраняет данные в атрибуты сущности из сырых данных
      *
      * @param object $entity Объект сущности
      * @param array $response Массив данных ответа внешней системы
      * @return bool Результат операции
      */
-    public function store($entity, $response, bool $force = false)
+    public function storeInMC($entity, $response, bool $force = false)
     {
         $uuid = $response['uuid'] ?? null;
         $type = $entity?->meta?->type ?? null;
