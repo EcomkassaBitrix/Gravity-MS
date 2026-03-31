@@ -65,9 +65,6 @@ class StatusService extends AbstractService
      */
     public function getStatusText($appId, $appUid, $contextKey, $extensionPoint, $objectId): ?string
     {
-        $accountId = JsonApi::getAccountIdByContextKey($contextKey);
-        $jsonApi = $this->getJsonApi($accountId);
-
         $type = match($extensionPoint) {
             Document::DOCUMENT_DEMAND_EDIT => Type::DEMAND,
             Document::DOCUMENT_SALESRETURN_EDIT => Type::SALES_RETURN,
@@ -78,7 +75,11 @@ class StatusService extends AbstractService
         $this->getLogger()->info('Получение статуса чека', [
             'type' => $type,
             'extensionPoint' => $extensionPoint,
+            'objectId' => $objectId,
         ]);
+
+        $accountId = JsonApi::getAccountIdByContextKey($contextKey);
+        $jsonApi = $this->getJsonApi($accountId);
 
         if ($type) {
             $this->getLogger()->info('Получение статуса чека (тип)', [
@@ -92,6 +93,21 @@ class StatusService extends AbstractService
                 'id' => $objectId,
                 'object' => $object,
             ]);
+
+
+            $checkService = new CheckService($this->getLogger());
+            $checks = $checkService->findCheck($type, $objectId);
+
+            if (is_array($checks)) {
+                foreach ($checks as $check) {
+                    $checkId = $check['check_id'] ?? null;
+
+                    if (!empty($checkId)) {
+
+                       return sprintf('%s (ID: %s)', static::DEFAULT_TEXT_SENT, $checkId);
+                    }
+                }
+            }
 
             $attributeName = $this->fetchAttributeName($type);
             $uuid = $this->fetchAttributeValueFromObject($object, $attributeName);

@@ -16,8 +16,23 @@ class CheckService extends AbstractService
         $this->setConnectionService(new ConnectionService($logger));
     }
 
-    public function addCheck(string $entity, string $objectId, string $check): ?int
+    public function addCheck(?string $entity, ?string $objectId, ?string $check): ?int
     {
+        if (empty($entity)) {
+
+            return null;
+        }
+
+        if (empty($objectId)) {
+
+            return null;
+        }
+
+        if (empty($check)) {
+
+            return null;
+        }
+
         $connection = $this->getConnectionService()->getConnection();
         $queryBuilder = $connection->createQueryBuilder();
 
@@ -39,8 +54,18 @@ class CheckService extends AbstractService
         return null;
     }
 
-    public function findCheck(string $entity, string $objectId): ?array
+    public function findCheck(?string $entity, ?string $objectId): ?array
     {
+        if (empty($entity)) {
+
+            return null;
+        }
+
+        if (empty($objectId)) {
+
+            return null;
+        }
+
         $connection = $this->getConnectionService()->getConnection();
         $queryBuilder = $connection->createQueryBuilder();
 
