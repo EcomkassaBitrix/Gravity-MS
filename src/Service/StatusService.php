@@ -54,6 +54,19 @@ class StatusService extends AbstractService
     }
 
     /**
+     * Формирует и возвращает строку статуса чека.
+     *
+     * @param $checkId Идентификатор чека
+     * @return string Строка статуса чека
+     */
+    public function makeStatusText($checkId): string
+    {
+        $url = sprintf('https://app.ecomkassa.ru/admin/orders/%s', $checkId);
+
+        return sprintf('%s (ID: <a target="_blank" href="%s">%s</a>)', static::DEFAULT_TEXT_SENT, $url, $checkId);
+    }
+
+    /**
      * Возвращает публичную строку статуса чека
      *
      * @param string $appId Идентификатор текущего аккаунта
@@ -104,7 +117,7 @@ class StatusService extends AbstractService
 
                     if (!empty($checkId)) {
 
-                       return sprintf('%s (ID: %s)', static::DEFAULT_TEXT_SENT, $checkId);
+                       return $this->makeStatusText($checkId);
                     }
                 }
             }
@@ -117,7 +130,7 @@ class StatusService extends AbstractService
             ]);
 
             if ($uuid) {
-                return sprintf('%s (UUID: %s)', static::DEFAULT_TEXT_SENT, $uuid);
+                return $this->makeStatusText($uuid);
             } else {
                 return self::DEFAULT_NOT_FOUND_TEXT;
             }
