@@ -146,7 +146,7 @@ class MarkCode
 
         if (isset($data['gs1m'])) {
             $s = base64_decode($data['gs1m']);
-            $s = str_replace(chr(29), ' ', $s);
+            $s = str_replace(chr(29), '\\u001D', $s);
             $this->setGs1m($s);
         }
 
