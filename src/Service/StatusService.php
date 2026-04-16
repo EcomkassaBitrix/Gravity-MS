@@ -271,6 +271,10 @@ class StatusService extends AbstractService
                     'localId' => $localId,
                 ]);
 
+                if (!$this->alreadyStoredInMC($entity)) {
+                    $this->storeInMC($entity, $response, $force);
+                }
+
                 return true;
             } else {
                 $this->getLogger()->warning('Ошибка сохранения сведений о чеке в базу данных', [
